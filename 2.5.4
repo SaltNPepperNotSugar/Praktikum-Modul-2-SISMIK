@@ -1,0 +1,28 @@
+// Timer Interrupt (All LED ON every t+2)
+#include <Arduino.h>
+#define LED_COUNT 8
+int ledPins[LED_COUNT] = {2, 4, 5, 18, 19, 21, 22, 23};
+volatile int ledState[LED_COUNT];
+hw_timer_t *timer = NULL;
+const long interval = 2000; // 2 detik
+void IRAM_ATTR onTimer() {
+// Ubah keadaan LED
+for (int i = 0; i < LED_COUNT; i++) {
+ledState[i] = !ledState[i];
+digitalWrite(ledPins[i], ledState[i]);
+}
+}
+void setup() {
+for (int i = 0; i < LED_COUNT; i++) {
+pinMode(ledPins[i], OUTPUT);
+ledState[i] = LOW; // Inisialisasi keadaan LED
+}
+// Set up timer
+timer = timerBegin(0, 80, true); // Gunakan timer 0, prescaler 80, 1 tick = 1 μs
+timerAttachInterrupt(timer, &onTimer, true); // Lampirkan fungsi ISR
+timerAlarmWrite(timer, interval * 1000, true); // Set alarm setiap 2 detik (dalam mikrodetik)
+timerAlarmEnable(timer); // Aktifkan timer
+}
+void loop() {
+// Loop utama kosong, tidak ada yang perlu dilakukan di sini
+}
