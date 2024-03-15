@@ -1,0 +1,42 @@
+// Running LED with Push Button (ESP-IDF)
+#include <stdio.h>
+#include "driver/gpio.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+#define LED_COUNT 8
+#define BUTTON_PIN 15
+
+int led_pins[LED_COUNT] = {2, 4, 5, 18, 19, 21, 22, 23};
+int button_state = 0, system_state = 0;
+
+void setup() {
+    // Configure LED GPIOs as outputs
+    for (int i = 0; i < LED_COUNT; i++) {
+        gpio_set_direction((gpio_num_t)led_pins[i], GPIO_MODE_OUTPUT);
+    }
+    // Configure push button GPIO as input
+    gpio_set_direction((gpio_num_t)BUTTON_PIN, GPIO_MODE_INPUT);
+    gpio_set_pull_mode((gpio_num_t)BUTTON_PIN, GPIO_PULLUP_ONLY);
+}
+
+void loop() {
+    button_state = gpio_get_level((gpio_num_t)BUTTON_PIN);
+    // Turn off all LEDs
+    for (int i = 0; i < LED_COUNT; i++) {
+        gpio_set_level((gpio_num_t)led_pins[i], 0);
+    }
+    // Turn on the LED corresponding to the system state
+    gpio_set_level((gpio_num_t)led_pins[system_state], 1);
+    if (button_state == 0) {
+        system_state = (system_state + 1) % LED_COUNT;
+        vTaskDelay(pdMS_TO_TICKS(200));
+    }
+}
+
+void app_main() {
+    setup();
+    while (1) {
+    loop();
+    }
+}
