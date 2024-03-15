@@ -1,4 +1,4 @@
-// Running LED Bouncing (ESP - IDF)
+// Running LED Bouncing (ESP - IDF) 
 // Timer 250 ms
 #include <Arduino.h>
 #define LED_COUNT 8
