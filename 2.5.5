@@ -1,0 +1,60 @@
+//2 LED ON (by button) Interrupt
+#define LED_COUNT 8 // Nyalakan LED berikutnya sesuai dengan pola yang 
+#include <stdio.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/gpio.h"
+
+gpio_num_t ledPins[LED_COUNT] = {GPIO_NUM_2, GPIO_NUM_4, GPIO_NUM_5, GPIO_NUM_18, GPIO_NUM_19, GPIO_NUM_21, GPIO_NUM_22, GPIO_NUM_23};
+const gpio_num_t buttonPin = GPIO_NUM_15;
+volatile bool buttonPressed = false;
+volatile int ledIndex = 0;
+
+void buttonISR(void* arg) {
+    buttonPressed = true;
+}
+
+extern "C" void app_main() {
+    // Konfigurasi pin LED sebagai output
+    for (int i = 0; i < LED_COUNT; i++) {
+        gpio_set_direction(ledPins[i], GPIO_MODE_OUTPUT);
+    }
+    // Konfigurasi pin tombol sebagai input dengan pullup resistor
+    gpio_set_direction(buttonPin, GPIO_MODE_INPUT);
+    gpio_set_pull_mode(buttonPin, GPIO_PULLUP_ONLY);
+    // Menambahkan fungsi interrupt ke pin tombol pada edge naik (rising edge)
+    gpio_set_intr_type(buttonPin, GPIO_INTR_POSEDGE);
+    gpio_install_isr_service(0);
+    gpio_isr_handler_add(buttonPin, buttonISR, NULL);
+
+    while(1){
+        if (buttonPressed) {
+            // Pergeseran LED hanya terjadi saat tombol ditekan
+            buttonPressed = false; // Reset flag tombol ditekan
+            // Matikan semua LED
+            for (int i = 0; i < LED_COUNT; i++) {
+                gpio_set_level(ledPins[i], LOW);
+            }
+            switch (ledIndex) {
+                case 0:
+                    gpio_set_level(ledPins[0], HIGH);
+                    gpio_set_level(ledPins[1], HIGH);
+                    break;
+                case 2:
+                    gpio_set_level(ledPins[2], HIGH);
+                    gpio_set_level(ledPins[3], HIGH);
+                    break;
+                case 4:
+                    gpio_set_level(ledPins[4], HIGH);
+                    gpio_set_level(ledPins[5], HIGH);
+                    break;
+                case 6:
+                    gpio_set_level(ledPins[6], HIGH);
+                    gpio_set_level(ledPins[7], HIGH);
+                    break;
+            }
+            ledIndex = (ledIndex + 1) % LED_COUNT;
+            vTaskDelay(pdMS_TO_TICKS(500)); // Delay untuk menghindari bouncing tombol
+        }
+    }
+}
