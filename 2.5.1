@@ -1,0 +1,52 @@
+// Running LED with 500ms delay (ESP-IDF)
+#include <stdio.h>
+#include "driver/gpio.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+
+#define GPIO_OUTPUT_A GPIO_NUM_2
+#define GPIO_OUTPUT_B GPIO_NUM_4
+#define GPIO_OUTPUT_C GPIO_NUM_5
+#define GPIO_OUTPUT_D GPIO_NUM_18
+#define GPIO_OUTPUT_E GPIO_NUM_19
+#define GPIO_OUTPUT_F GPIO_NUM_21
+#define GPIO_OUTPUT_G GPIO_NUM_22
+#define GPIO_OUTPUT_H GPIO_NUM_23
+#define GPIO_OUTPUT_PIN_SEL ((1ULL<<GPIO_OUTPUT_A) | \
+(1ULL<<GPIO_OUTPUT_B) | \
+(1ULL<<GPIO_OUTPUT_C) | \
+(1ULL<<GPIO_OUTPUT_D) | \
+(1ULL<<GPIO_OUTPUT_E) | \
+(1ULL<<GPIO_OUTPUT_F) | \
+(1ULL<<GPIO_OUTPUT_G) | \
+(1ULL<<GPIO_OUTPUT_H))
+#define DELAY_MS 500 // Waktu delay
+const TickType_t xDelay = DELAY_MS / portTICK_PERIOD_MS;
+void setup() {
+    gpio_config_t io_conf;
+    io_conf.intr_type = GPIO_INTR_DISABLE; // Tidak menggunakan interrupt
+    io_conf.mode = GPIO_MODE_OUTPUT; // Mode output
+    io_conf.pin_bit_mask = GPIO_OUTPUT_PIN_SEL;
+    io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE; // Menonaktifkan pull down
+    io_conf.pull_up_en = GPIO_PULLUP_DISABLE; // Menonaktifkan pull up
+    gpio_config(&io_conf);
+}
+
+void loop() {
+    int i = 0;
+    gpio_num_t LED[] = {GPIO_OUTPUT_A, GPIO_OUTPUT_B, GPIO_OUTPUT_C, GPIO_OUTPUT_D,
+    GPIO_OUTPUT_E, GPIO_OUTPUT_F, GPIO_OUTPUT_G, GPIO_OUTPUT_H};
+    while (1) {
+    gpio_set_level(LED[i], 1); // Hidupkan LED saat ini
+    gpio_set_level(LED[(i + 7) % 8], 0); // Matikan LED sebelumnya
+    i = (i + 1) % 8; // Geser ke LED berikutnya
+    vTaskDelay(xDelay); // Delay sebelum mengganti LED
+    }
+}
+
+void app_main() {
+    setup(); // Panggil fungsi setup
+    while (1) {
+    loop(); // Panggil fungsi loop secara terus menerus
+    }
+}
