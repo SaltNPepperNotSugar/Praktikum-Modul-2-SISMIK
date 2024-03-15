@@ -1,0 +1,40 @@
+// Running LED dimulai dari LED ke 7 ESP-IDF
+// Interval 250 ms
+#include <Arduino.h>
+
+#define LED_COUNT 8
+
+gpio_num_t ledPins[LED_COUNT] = {GPIO_NUM_22, GPIO_NUM_23, GPIO_NUM_2, GPIO_NUM_4,
+                                  GPIO_NUM_5, GPIO_NUM_18, GPIO_NUM_19, GPIO_NUM_21};
+unsigned long previousMillis = 0;
+const unsigned long interval = 250; // 250ms interval
+int currentLed = 0;
+
+void onTimer(void* arg) {
+    // Matikan semua LED
+    for (int i = 0; i < LED_COUNT; i++) {
+         gpio_set_level(ledPins[i], LOW);
+    }
+    // Nyalakan LED yang sesuai
+     gpio_set_level(ledPins[currentLed], HIGH);
+    // Pindah ke LED berikutnya
+    currentLed = (currentLed + 1) % LED_COUNT;
+}
+
+extern "C" void app_main(){
+    for (int i = 0; i < LED_COUNT; i++) {
+        pinMode(ledPins[i], OUTPUT);
+    }
+    // Set up timer
+    esp_timer_create_args_t timer_args = {
+        .callback = &onTimer,
+        .arg = NULL,
+        .name = "periodic"
+    };
+    esp_timer_handle_t timer;
+    esp_timer_create(&timer_args, &timer);
+    esp_timer_start_periodic(timer, interval * 1000); // Set timer interval in microseconds
+    while (1){
+        // Loop utama program, tidak ada yang perlu dilakukan di sini
+    }
+}
